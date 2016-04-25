@@ -30,28 +30,6 @@ SDL_MODE_SAMPLE = 0     #sample mode means return immediately.  THe wind speed i
 SDL_MODE_DELAY = 1      #Delay mode means to wait for sampleTime and the average after that time.
 WIND_FACTOR = 2.400
 
-# Create an ADS1015 ADC (12-bit) instance.
-# Note you can change the I2C address from its default (0x48), and/or the I2C
-# bus by passing in these optional parameters:
-adc = Adafruit_ADS1x15.ADS1015(address=0x49, busnum=1)
-
-# Choose a gain of 1 for reading voltages from 0 to 4.09V.
-# Or pick a different gain to change the range of voltages that are read:
-#  - 2/3 = +/-6.144V
-#  -   1 = +/-4.096V
-#  -   2 = +/-2.048V
-#  -   4 = +/-1.024V
-#  -   8 = +/-0.512V
-#  -  16 = +/-0.256V
-# See table 3 in the ADS1015/ADS1115 datasheet for more info on gain.
-GAIN = 2/3
-
-# Choose a sample rate (128, 250, 490, 920, 1600, 2400, 3300)
-SAMPLERATE = 250
-
-# Set Wind Vane channel
-WINDVANECH = 1
-
 # Helper Functions
 def fuzzyCompare(compareValue, value):
 	VARYVALUE = 0.05
@@ -105,7 +83,7 @@ def micros():
 class SDL_Pi_Weather_80422:
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setwarnings(False)
-	
+
 	# instance variables
 	_currentWindCount = 0
 	_currentRainCount = 0
@@ -138,6 +116,28 @@ class SDL_Pi_Weather_80422:
 		GPIO.add_event_detect(pinAnem, GPIO.RISING, callback=self.serviceInterruptAnem )
 		GPIO.add_event_detect(pinRain, GPIO.RISING, callback=self.serviceInterruptRain )
 
+		# Create an ADS1015 ADC (12-bit) instance.
+		# Note you can change the I2C address from its default (0x48), and/or the I2C
+		# bus by passing in these optional parameters:
+		self.adc = Adafruit_ADS1x15.ADS1015(address=0x49, busnum=1)
+
+		# Choose a gain of 1 for reading voltages from 0 to 4.09V.
+		# Or pick a different gain to change the range of voltages that are read:
+		#  - 2/3 = +/-6.144V
+		#  -   1 = +/-4.096V
+		#  -   2 = +/-2.048V
+		#  -   4 = +/-1.024V
+		#  -   8 = +/-0.512V
+		#  -  16 = +/-0.256V
+		# See table 3 in the ADS1015/ADS1115 datasheet for more info on gain.
+		self.GAIN = 2/3
+
+		# Choose a sample rate (128, 250, 490, 920, 1600, 2400, 3300)
+		self.SAMPLERATE = 250
+
+		# Set Wind Vane channel
+		self.WINDVANECH = 1
+
 		#ADS1015 = 0x00  # 12-bit ADC
 		# Select the gain
 		#self.gain = 2/3  # +/- 6.144V (2/3)
@@ -156,7 +156,7 @@ class SDL_Pi_Weather_80422:
 
 	def current_wind_direction(self):
     		if (SDL_Pi_Weather_80422._ADMode == SDL_MODE_I2C_ADS1015):
-			value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
+			value = adc.read_adc(self.WINDVANECH, gain=self.GAIN, data_rate=self.SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
 			#value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
       			voltageValue = value/1000
     		else:
@@ -167,7 +167,7 @@ class SDL_Pi_Weather_80422:
 
 	def current_wind_direction_voltage(self):
     		if (SDL_Pi_Weather_80422._ADMode == SDL_MODE_I2C_ADS1015):
-			value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
+			value = adc.read_adc(self.WINDVANECH, gain=self.GAIN, data_rate=self.SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
 			#value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
       			voltageValue = value/1000
     		else:
