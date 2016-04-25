@@ -105,6 +105,7 @@ def micros():
 class SDL_Pi_Weather_80422:
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setwarnings(False)
+	
 	# instance variables
 	_currentWindCount = 0
 	_currentRainCount = 0
@@ -115,11 +116,11 @@ class SDL_Pi_Weather_80422:
   	_intRain = 0
    	_ADChannel = 0
 	_ADMode = 0
-    _currentRainCount = 0
-    _currentWindCount = 0
-    _currentWindSpeed = 0.0
+	_currentRainCount = 0
+        _currentWindCount = 0
+        _currentWindSpeed = 0.0
  	_currentWindDirection = 0.0
-    _lastWindTime = 0
+        _lastWindTime = 0
 	_shortestWindTime = 0
 	_sampleTime = 5.0
 	_selectedMode = SDL_MODE_SAMPLE
@@ -155,19 +156,19 @@ class SDL_Pi_Weather_80422:
 
 	def current_wind_direction(self):
     		if (SDL_Pi_Weather_80422._ADMode == SDL_MODE_I2C_ADS1015):
-				value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
-				#value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
+			value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
+			#value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
       			voltageValue = value/1000
     		else:
       			# user internal A/D converter
       			voltageValue = 0.0
-			direction = voltageToDegrees(voltageValue, SDL_Pi_Weather_80422._currentWindDirection)
+		direction = voltageToDegrees(voltageValue, SDL_Pi_Weather_80422._currentWindDirection)
     		return direction;
 
 	def current_wind_direction_voltage(self):
     		if (SDL_Pi_Weather_80422._ADMode == SDL_MODE_I2C_ADS1015):
-				value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
-				#value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
+			value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
+			#value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
       			voltageValue = value/1000
     		else:
       			# user internal A/D converter
@@ -193,11 +194,11 @@ class SDL_Pi_Weather_80422:
 	def get_current_wind_speed_when_sampling(self):
    		compareValue = SDL_Pi_Weather_80422._sampleTime*1000000;
    		if (micros() - SDL_Pi_Weather_80422._startSampleTime >= compareValue):
-      		timeSpan = (micros() - SDL_Pi_Weather_80422._startSampleTime); # sample time exceeded, calculate currentWindSpeed
-      		SDL_Pi_Weather_80422._currentWindSpeed = (float(SDL_Pi_Weather_80422._currentWindCount)/float(timeSpan)) * WIND_FACTOR*1000000.0
+	      		timeSpan = (micros() - SDL_Pi_Weather_80422._startSampleTime); # sample time exceeded, calculate currentWindSpeed
+ 	     		SDL_Pi_Weather_80422._currentWindSpeed = (float(SDL_Pi_Weather_80422._currentWindCount)/float(timeSpan)) * WIND_FACTOR*1000000.0
 			#print "SDL_CWS = %f, SDL_Pi_Weather_80422._shortestWindTime = %i, CWCount=%i TPS=%f" % (SDL_Pi_Weather_80422._currentWindSpeed,SDL_Pi_Weather_80422._shortestWindTime, SDL_Pi_Weather_80422._currentWindCount, float(SDL_Pi_Weather_80422._currentWindCount)/float(SDL_Pi_Weather_80422._sampleTime))
-      		SDL_Pi_Weather_80422._currentWindCount = 0
-      		SDL_Pi_Weather_80422._startSampleTime = micros()
+      			SDL_Pi_Weather_80422._currentWindCount = 0
+      			SDL_Pi_Weather_80422._startSampleTime = micros()
  			#print "SDL_Pi_Weather_80422._currentWindSpeed=", SDL_Pi_Weather_80422._currentWindSpeed
    		return SDL_Pi_Weather_80422._currentWindSpeed
 
