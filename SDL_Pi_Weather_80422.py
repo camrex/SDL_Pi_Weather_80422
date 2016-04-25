@@ -14,17 +14,11 @@
 
 import sys
 import time as time_
-
-sys.path.append('./Adafruit_ADS1x15')
-
-from Adafruit_ADS1x15 import ADS1x15
-
+import Adafruit_ADS1x15
 import RPi.GPIO as GPIO
-
+from datetime import *
 
 GPIO.setwarnings(False)
-
-from datetime import *
 
 
 # constants
@@ -168,15 +162,15 @@ class SDL_Pi_Weather_80422:
 
 		ADS1015 = 0x00  # 12-bit ADC
 		# Select the gain
-		self.gain = 6144  # +/- 6.144V
-		#self.gain = 4096  # +/- 4.096V
+		self.gain = 2/3  # +/- 6.144V (2/3)
+		#self.gain = 1  # +/- 4.096V (1)
 
 		# Select the sample rate
 		self.sps = 250  # 250 samples per second
 
 		# Initialise the ADC using the default mode (use default I2C address)
 		# Set this to ADS1015 or ADS1115 depending on the ADC you are using!
-		self.ads1015 = ADS1x15(ic=ADS1015, address=0x48)
+		self.ads1015 = Adafruit_ADS1x15.ADS1015(address=0x49, busnum=1)     # Changed default address (0x48) to 0x49
 
 		SDL_Pi_Weather_80422._ADMode = ADMode
 
@@ -186,7 +180,7 @@ class SDL_Pi_Weather_80422:
 	def current_wind_direction(self):
     
     		if (SDL_Pi_Weather_80422._ADMode == SDL_MODE_I2C_ADS1015):
-			value = self.ads1015.readADCSingleEnded(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
+			value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
 
       			voltageValue = value/1000
 
@@ -202,7 +196,7 @@ class SDL_Pi_Weather_80422:
 	def current_wind_direction_voltage(self):
     
     		if (SDL_Pi_Weather_80422._ADMode == SDL_MODE_I2C_ADS1015):
-			value = self.ads1015.readADCSingleEnded(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
+			value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
 
       			voltageValue = value/1000
 
