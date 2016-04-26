@@ -156,7 +156,7 @@ class SDL_Pi_Weather_80422:
 
 	def current_wind_direction(self):
     		if (SDL_Pi_Weather_80422._ADMode == SDL_MODE_I2C_ADS1015):
-			value = adc.read_adc(self.WINDVANECH, gain=self.GAIN, data_rate=self.SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
+			value = self.adc.read_adc(self.WINDVANECH, gain=self.GAIN, data_rate=self.SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
 			#value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
       			voltageValue = value/1000
     		else:
@@ -167,7 +167,7 @@ class SDL_Pi_Weather_80422:
 
 	def current_wind_direction_voltage(self):
     		if (SDL_Pi_Weather_80422._ADMode == SDL_MODE_I2C_ADS1015):
-			value = adc.read_adc(self.WINDVANECH, gain=self.GAIN, data_rate=self.SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
+			value = self.adc.read_adc(self.WINDVANECH, gain=self.GAIN, data_rate=self.SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
 			#value = self.ads1015.read_adc(1, self.gain, self.sps) # AIN1 wired to wind vane on WeatherPiArduino
       			voltageValue = value/1000
     		else:
