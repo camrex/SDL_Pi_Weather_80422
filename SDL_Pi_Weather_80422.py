@@ -13,7 +13,7 @@
 #
 
 # imports
-
+from __future__ import division
 import sys
 import time as time_
 import Adafruit_ADS1x15
@@ -37,7 +37,7 @@ adc = Adafruit_ADS1x15.ADS1015(address=0x49, busnum=3)
 #  -   8 = +/-0.512V
 #  -  16 = +/-0.256V
 # See table 3 in the ADS1015/ADS1115 datasheet for more info on gain.
-GAIN = 2/3
+GAIN = 2//3
 
 # Choose a sample rate (128, 250, 490, 920, 1600, 2400, 3300)
 SAMPLERATE = 250
