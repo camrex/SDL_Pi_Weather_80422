@@ -14,11 +14,11 @@
 
 # imports
 from __future__ import division
-import sys
 import time as time_
 import Adafruit_ADS1x15
 import RPi.GPIO as GPIO
 from datetime import *
+# import sys
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
@@ -48,185 +48,197 @@ WINDVANECH = 1
 # constants
 SDL_MODE_INTERNAL_AD = 0
 SDL_MODE_I2C_ADS1015 = 1
-SDL_MODE_SAMPLE = 0     #sample mode means return immediately.  THe wind speed is averaged at sampleTime or when you ask, whichever is longer
-SDL_MODE_DELAY = 1      #Delay mode means to wait for sampleTime and the average after that time.
+SDL_MODE_SAMPLE = 0     # sample mode means return immediately.  THe wind speed is averaged at sampleTime or when you ask, whichever is longer
+SDL_MODE_DELAY = 1      # Delay mode means to wait for sampleTime and the average after that time.
 WIND_FACTOR = 2.400
 
-# Helper Functions
+
 def fuzzyCompare(compareValue, value):
-	VARYVALUE = 0.05
-   	if ( (value > (compareValue * (1.0-VARYVALUE)))  and (value < (compareValue *(1.0+VARYVALUE))) ):
-     		return True
-	return False
+    """Compare used in voltageToDegrees."""
+    VARYVALUE = 0.05
+    if ((value > (compareValue * (1.0 - VARYVALUE))) and (value < (compareValue * (1.0 + VARYVALUE)))):
+        return True
+    return False
+
 
 def voltageToDegrees(value, defaultWindDirection):
+    """Convert voltage to degrees for wind vane."""
     # Note:  The original documentation for the wind vane says 16 positions.  Typically only recieve 8 positions.  And 315 degrees was wrong.
-	ADJUST3OR5 = 0.66     # For 5V, use 1.0.  For 3.3V use 0.66
-	PowerVoltage = 3.3
-	if (fuzzyCompare(3.84 * ADJUST3OR5, value)):
-	    return 0.0
-	if (fuzzyCompare(1.98 * ADJUST3OR5, value)):
-	    return 22.5
-	if (fuzzyCompare(2.25 * ADJUST3OR5, value)):
-		return 45
-	if (fuzzyCompare(0.41 * ADJUST3OR5, value)):
-		return 67.5
-	if (fuzzyCompare(0.45 * ADJUST3OR5, value)):
-		return 90.0
-	if (fuzzyCompare(0.32 * ADJUST3OR5, value)):
-		return 112.5
-	if (fuzzyCompare(0.90 * ADJUST3OR5, value)):
-		return 135.0
-	if (fuzzyCompare(0.62 * ADJUST3OR5, value)):
-		return 157.5
-	if (fuzzyCompare(1.40 * ADJUST3OR5, value)):
-		return 180
-	if (fuzzyCompare(1.19 * ADJUST3OR5, value)):
-		return 202.5
-	if (fuzzyCompare(3.08 * ADJUST3OR5, value)):
-		return 225
-	if (fuzzyCompare(2.93 * ADJUST3OR5, value)):
-		return 247.5
-	if (fuzzyCompare(4.62 * ADJUST3OR5, value)):
-		return 270.0
-	if (fuzzyCompare(4.04 * ADJUST3OR5, value)):
-		return 292.5
-	if (fuzzyCompare(4.34 * ADJUST3OR5, value)): # chart in manufacturers documentation wrong
-		return 315.0
-	if (fuzzyCompare(3.43 * ADJUST3OR5, value)):
-		return 337.5
-	return defaultWindDirection  # return previous value if not found
+    ADJUST3OR5 = 0.66     # For 5V, use 1.0.  For 3.3V use 0.66
+    if (fuzzyCompare(3.84 * ADJUST3OR5, value)):
+        return 0.0
+    if (fuzzyCompare(1.98 * ADJUST3OR5, value)):
+        return 22.5
+    if (fuzzyCompare(2.25 * ADJUST3OR5, value)):
+        return 45
+    if (fuzzyCompare(0.41 * ADJUST3OR5, value)):
+        return 67.5
+    if (fuzzyCompare(0.45 * ADJUST3OR5, value)):
+        return 90.0
+    if (fuzzyCompare(0.32 * ADJUST3OR5, value)):
+        return 112.5
+    if (fuzzyCompare(0.90 * ADJUST3OR5, value)):
+        return 135.0
+    if (fuzzyCompare(0.62 * ADJUST3OR5, value)):
+        return 157.5
+    if (fuzzyCompare(1.40 * ADJUST3OR5, value)):
+        return 180
+    if (fuzzyCompare(1.19 * ADJUST3OR5, value)):
+        return 202.5
+    if (fuzzyCompare(3.08 * ADJUST3OR5, value)):
+        return 225
+    if (fuzzyCompare(2.93 * ADJUST3OR5, value)):
+        return 247.5
+    if (fuzzyCompare(4.62 * ADJUST3OR5, value)):
+        return 270.0
+    if (fuzzyCompare(4.04 * ADJUST3OR5, value)):
+        return 292.5
+    if (fuzzyCompare(4.34 * ADJUST3OR5, value)):  # chart in manufacturers documentation wrong
+        return 315.0
+    if (fuzzyCompare(3.43 * ADJUST3OR5, value)):
+        return 337.5
+    return defaultWindDirection  # return previous value if not found
 
-# return current microseconds
+
 def micros():
-	microseconds = int(round(time_.time() * 1000000))
-	return microseconds
+    """Return current microseconds."""
+    microseconds = int(round(time_.time() * 1000000))
+    return microseconds
+
 
 class SDL_Pi_Weather_80422:
-	GPIO.setmode(GPIO.BCM)
-	GPIO.setwarnings(False)
+    """Main weather station class."""
 
-	# instance variables
-	_currentWindCount = 0
-	_currentRainCount = 0
-	_shortestWindTime = 0
- 	_pinAnem = 0
-   	_pinRain = 0
- 	_intAnem = 0
-  	_intRain = 0
-   	_ADChannel = 0
-	_ADMode = 0
-	_currentRainCount = 0
-        _currentWindCount = 0
-        _currentWindSpeed = 0.0
- 	_currentWindDirection = 0.0
-        _lastWindTime = 0
-	_shortestWindTime = 0
-	_sampleTime = 5.0
-	_selectedMode = SDL_MODE_SAMPLE
- 	_startSampleTime = 0
-	_currentRainMin = 0
-	_lastRainTime = 0
-	_ads1015 = 0
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
 
-	def __init__(self, pinAnem, pinRain, intAnem, intRain, ADMode ):
-		GPIO.setup(pinAnem, GPIO.IN)
-		GPIO.setup(pinRain, GPIO.IN)
+    # instance variables
+    _currentWindCount = 0
+    _currentRainCount = 0
+    _shortestWindTime = 0
+    _pinAnem = 0
+    _pinRain = 0
+    _intAnem = 0
+    _intRain = 0
+    _ADChannel = 0
+    _ADMode = 0
+    _currentRainCount = 0
+    _currentWindCount = 0
+    _currentWindSpeed = 0.0
+    _currentWindDirection = 0.0
+    _lastWindTime = 0
+    _shortestWindTime = 0
+    _sampleTime = 5.0
+    _selectedMode = SDL_MODE_SAMPLE
+    _startSampleTime = 0
+    _currentRainMin = 0
+    _lastRainTime = 0
+    _ads1015 = 0
 
-		# when a falling edge is detected on port pinAnem, regardless of whatever
-		# else is happening in the program, the function callback will be run
-		GPIO.add_event_detect(pinAnem, GPIO.RISING, callback=self.serviceInterruptAnem )
-		GPIO.add_event_detect(pinRain, GPIO.RISING, callback=self.serviceInterruptRain )
+    def __init__(self, pinAnem, pinRain, intAnem, intRain, ADMode):
+        """ Initialize weather station."""
+        GPIO.setup(pinAnem, GPIO.IN)
+        GPIO.setup(pinRain, GPIO.IN)
 
-		SDL_Pi_Weather_80422._ADMode = ADMode
+        # when a falling edge is detected on port pinAnem, regardless of whatever
+        # else is happening in the program, the function callback will be run
+        GPIO.add_event_detect(pinAnem, GPIO.RISING, callback=self.serviceInterruptAnem)
+        GPIO.add_event_detect(pinRain, GPIO.RISING, callback=self.serviceInterruptRain)
 
-	# Wind Direction Routines
+        SDL_Pi_Weather_80422._ADMode = ADMode
 
-	def current_wind_direction(self):
-		value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
-      		voltageValue = value/1000
-		direction = voltageToDegrees(voltageValue, SDL_Pi_Weather_80422._currentWindDirection)
-    		return direction;
+    def current_wind_direction(self):
+        """Wind direction routines."""
+        value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE)  # AIN1 wired to wind vane on WeatherPiArduino
+        voltageValue = value / 1000
+        direction = voltageToDegrees(voltageValue, SDL_Pi_Weather_80422._currentWindDirection)
+        return direction
 
-	def current_wind_direction_voltage(self):
-		value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE) # AIN1 wired to wind vane on WeatherPiArduino
-      		voltageValue = value/1000
-    		return voltageValue
+    def current_wind_direction_voltage(self):
+        """Wind direction voltage."""
+        value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE)  # AIN1 wired to wind vane on WeatherPiArduino
+        voltageValue = value / 1000
+        return voltageValue
 
-	# Utility methods
+    def reset_rain_total(self):
+        """Reset rain total."""
+        SDL_Pi_Weather_80422._currentRainCount = 0
 
-	def reset_rain_total(self):
-		SDL_Pi_Weather_80422._currentRainCount = 0;
+    def accessInternalCurrentWindDirection(self):
+        """Access stored current wind direction."""
+        return SDL_Pi_Weather_80422._currentWindDirection
 
-	def accessInternalCurrentWindDirection(self):
-   		return SDL_Pi_Weather_80422._currentWindDirection;
+    def reset_wind_gust(self):
+        """Reset wind gust."""
+        SDL_Pi_Weather_80422._shortestWindTime = 0xffffffff
 
-	def reset_wind_gust(self):
-   		SDL_Pi_Weather_80422._shortestWindTime = 0xffffffff;
+    def startWindSample(self, sampleTime):
+        """Start sampling wind speed."""
+        SDL_Pi_Weather_80422._startSampleTime = micros()
+        SDL_Pi_Weather_80422._sampleTime = sampleTime
 
-	def startWindSample(self, sampleTime):
-      		SDL_Pi_Weather_80422._startSampleTime = micros();
-      		SDL_Pi_Weather_80422._sampleTime = sampleTime;
+    def get_current_wind_speed_when_sampling(self):
+        """Get current wind speed."""
+        compareValue = SDL_Pi_Weather_80422._sampleTime * 1000000
+        if (micros() - SDL_Pi_Weather_80422._startSampleTime >= compareValue):
+            timeSpan = (micros() - SDL_Pi_Weather_80422._startSampleTime)  # sample time exceeded, calculate currentWindSpeed
+            SDL_Pi_Weather_80422._currentWindSpeed = (float(SDL_Pi_Weather_80422._currentWindCount) / float(timeSpan)) * WIND_FACTOR * 1000000.0
+            # print "SDL_CWS = %f, SDL_Pi_Weather_80422._shortestWindTime = %i, CWCount=%i TPS=%f" % (SDL_Pi_Weather_80422._currentWindSpeed,SDL_Pi_Weather_80422._shortestWindTime, SDL_Pi_Weather_80422._currentWindCount, float(SDL_Pi_Weather_80422._currentWindCount)/float(SDL_Pi_Weather_80422._sampleTime))
+            SDL_Pi_Weather_80422._currentWindCount = 0
+            SDL_Pi_Weather_80422._startSampleTime = micros()
+            # print "SDL_Pi_Weather_80422._currentWindSpeed=", SDL_Pi_Weather_80422._currentWindSpeed
+            return SDL_Pi_Weather_80422._currentWindSpeed
 
-	# get current wind
-	def get_current_wind_speed_when_sampling(self):
-   		compareValue = SDL_Pi_Weather_80422._sampleTime*1000000;
-   		if (micros() - SDL_Pi_Weather_80422._startSampleTime >= compareValue):
-	      		timeSpan = (micros() - SDL_Pi_Weather_80422._startSampleTime); # sample time exceeded, calculate currentWindSpeed
- 	     		SDL_Pi_Weather_80422._currentWindSpeed = (float(SDL_Pi_Weather_80422._currentWindCount)/float(timeSpan)) * WIND_FACTOR*1000000.0
-			#print "SDL_CWS = %f, SDL_Pi_Weather_80422._shortestWindTime = %i, CWCount=%i TPS=%f" % (SDL_Pi_Weather_80422._currentWindSpeed,SDL_Pi_Weather_80422._shortestWindTime, SDL_Pi_Weather_80422._currentWindCount, float(SDL_Pi_Weather_80422._currentWindCount)/float(SDL_Pi_Weather_80422._sampleTime))
-      			SDL_Pi_Weather_80422._currentWindCount = 0
-      			SDL_Pi_Weather_80422._startSampleTime = micros()
- 			#print "SDL_Pi_Weather_80422._currentWindSpeed=", SDL_Pi_Weather_80422._currentWindSpeed
-   		return SDL_Pi_Weather_80422._currentWindSpeed
+    def setWindMode(self, selectedMode, sampleTime):  # time in seconds
+        """Set wind sampling mode."""
+        SDL_Pi_Weather_80422._sampleTime = sampleTime
+        SDL_Pi_Weather_80422._selectedMode = selectedMode
+        if (SDL_Pi_Weather_80422._selectedMode == SDL_MODE_SAMPLE):
+            self.startWindSample(SDL_Pi_Weather_80422._sampleTime)
 
-	def setWindMode(self, selectedMode, sampleTime): # time in seconds
-  		SDL_Pi_Weather_80422._sampleTime = sampleTime;
-  		SDL_Pi_Weather_80422._selectedMode = selectedMode;
-  		if (SDL_Pi_Weather_80422._selectedMode == SDL_MODE_SAMPLE):
-  			self.startWindSample(SDL_Pi_Weather_80422._sampleTime);
+    def get_current_rain_total(self):
+        """Get current rain total."""
+        rain_amount = 0.2794 * float(SDL_Pi_Weather_80422._currentRainCount)
+        SDL_Pi_Weather_80422._currentRainCount = 0
+        return rain_amount
 
-	#def get current values
-	def get_current_rain_total(self):
-        	rain_amount = 0.2794 * float(SDL_Pi_Weather_80422._currentRainCount)
-        	SDL_Pi_Weather_80422._currentRainCount = 0;
-		return rain_amount;
+    def current_wind_speed(self):  # in milliseconds
+        """Get curremt wind speed."""
+        if (SDL_Pi_Weather_80422._selectedMode == SDL_MODE_SAMPLE):
+            SDL_Pi_Weather_80422._currentWindSpeed = self.get_current_wind_speed_when_sampling()
+        else:
+            # km/h * 1000 msec
+            SDL_Pi_Weather_80422._currentWindCount = 0
+            delay(SDL_Pi_Weather_80422._sampleTime * 1000)
+            SDL_Pi_Weather_80422._currentWindSpeed = (float(SDL_Pi_Weather_80422._currentWindCount) / float(SDL_Pi_Weather_80422._sampleTime)) * WIND_FACTOR
+        return SDL_Pi_Weather_80422._currentWindSpeed
 
-	def current_wind_speed(self): # in milliseconds
-  		if (SDL_Pi_Weather_80422._selectedMode == SDL_MODE_SAMPLE):
-    			SDL_Pi_Weather_80422._currentWindSpeed = self.get_current_wind_speed_when_sampling();
-  		else:
-    			# km/h * 1000 msec
-    			SDL_Pi_Weather_80422._currentWindCount = 0;
-    			delay(SDL_Pi_Weather_80422._sampleTime*1000);
-    			SDL_Pi_Weather_80422._currentWindSpeed = (float(SDL_Pi_Weather_80422._currentWindCount)/float(SDL_Pi_Weather_80422._sampleTime)) * WIND_FACTOR;
-  		return SDL_Pi_Weather_80422._currentWindSpeed;
+    def get_wind_gust(self):
+        """Get wind gust."""
+        latestTime = SDL_Pi_Weather_80422._shortestWindTime
+        SDL_Pi_Weather_80422._shortestWindTime = 0xffffffff
+        time = latestTime / 1000000.0  # in microseconds
+        if (time == 0):
+            return 0
+        else:
+            return (1.0 / float(time)) * WIND_FACTOR
 
-	def get_wind_gust(self):
-  		latestTime =SDL_Pi_Weather_80422._shortestWindTime;
-  		SDL_Pi_Weather_80422._shortestWindTime=0xffffffff;
-  		time=latestTime/1000000.0;  # in microseconds
-		if (time == 0):
-			return 0
-		else:
-  			return (1.0/float(time))*WIND_FACTOR;
+    def serviceInterruptAnem(self, channel):
+        """Anenometer Interrupt Routine."""
+        # print "Anem Interrupt Service Routine"
+        currentTime = (micros() - SDL_Pi_Weather_80422._lastWindTime)
+        SDL_Pi_Weather_80422._lastWindTime = micros()
+        if(currentTime > 1000):   # debounce
+            SDL_Pi_Weather_80422._currentWindCount = SDL_Pi_Weather_80422._currentWindCount + 1
+            if(currentTime < SDL_Pi_Weather_80422._shortestWindTime):
+                SDL_Pi_Weather_80422._shortestWindTime = currentTime
 
-	# Interrupt Routines
-
-	def serviceInterruptAnem(self,channel):
-        #print "Anem Interrupt Service Routine"
-  		currentTime= (micros()-SDL_Pi_Weather_80422._lastWindTime);
-  		SDL_Pi_Weather_80422._lastWindTime=micros();
-  		if(currentTime>1000):   # debounce
-     			SDL_Pi_Weather_80422._currentWindCount = SDL_Pi_Weather_80422._currentWindCount+1
-     			if(currentTime<SDL_Pi_Weather_80422._shortestWindTime):
-     				SDL_Pi_Weather_80422._shortestWindTime=currentTime;
-
-	def serviceInterruptRain(self,channel):
-		#print "Rain Interrupt Service Routine"
-  		currentTime=(micros()-SDL_Pi_Weather_80422._lastRainTime);
-  		SDL_Pi_Weather_80422._lastRainTime=micros();
-  		if(currentTime>500):   # debounce
-       			SDL_Pi_Weather_80422._currentRainCount = SDL_Pi_Weather_80422._currentRainCount+1
-    			if(currentTime<SDL_Pi_Weather_80422._currentRainMin):
-     				SDL_Pi_Weather_80422._currentRainMin=currentTime;
+    def serviceInterruptRain(self, channel):
+        """Rain Bucket Interrupt Routine."""
+        # print "Rain Interrupt Service Routine"
+        currentTime = (micros() - SDL_Pi_Weather_80422._lastRainTime)
+        SDL_Pi_Weather_80422._lastRainTime = micros()
+        if(currentTime > 500):   # debounce
+            SDL_Pi_Weather_80422._currentRainCount = SDL_Pi_Weather_80422._currentRainCount + 1
+            if(currentTime < SDL_Pi_Weather_80422._currentRainMin):
+                SDL_Pi_Weather_80422._currentRainMin = currentTime
