@@ -150,14 +150,14 @@ class SDL_Pi_Weather_80422:
     def current_wind_direction(self):
         """Wind direction routines."""
         value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE)  # AIN1 wired to wind vane on WeatherPiArduino
-        voltageValue = value / 1000
+        voltageValue = value / 1000 * 3
         direction = voltageToDegrees(voltageValue, SDL_Pi_Weather_80422._currentWindDirection)
         return direction
 
     def current_wind_direction_voltage(self):
         """Wind direction voltage."""
         value = adc.read_adc(WINDVANECH, gain=GAIN, data_rate=SAMPLERATE)  # AIN1 wired to wind vane on WeatherPiArduino
-        voltageValue = value / 1000
+        voltageValue = value / 1000 * 3
         return voltageValue
 
     def reset_rain_total(self):
