@@ -17,7 +17,7 @@ from __future__ import division
 import time as time_
 import Adafruit_ADS1x15
 import RPi.GPIO as GPIO
-from datetime import *
+# from datetime import *
 # import sys
 
 GPIO.setmode(GPIO.BCM)
@@ -107,8 +107,8 @@ def micros():
 
 
 class SDL_Pi_Weather_80422:
-    """Main weather station class."""
 
+    """Main weather station class."""
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
 
@@ -136,7 +136,7 @@ class SDL_Pi_Weather_80422:
     _ads1015 = 0
 
     def __init__(self, pinAnem, pinRain, intAnem, intRain, ADMode):
-        """ Initialize weather station."""
+        """Initialize weather station."""
         GPIO.setup(pinAnem, GPIO.IN)
         GPIO.setup(pinRain, GPIO.IN)
 
@@ -209,7 +209,7 @@ class SDL_Pi_Weather_80422:
         else:
             # km/h * 1000 msec
             SDL_Pi_Weather_80422._currentWindCount = 0
-            delay(SDL_Pi_Weather_80422._sampleTime * 1000)
+            time_.sleep(SDL_Pi_Weather_80422._sampleTime)
             SDL_Pi_Weather_80422._currentWindSpeed = (float(SDL_Pi_Weather_80422._currentWindCount) / float(SDL_Pi_Weather_80422._sampleTime)) * WIND_FACTOR
         return SDL_Pi_Weather_80422._currentWindSpeed
 
